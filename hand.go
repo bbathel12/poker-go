@@ -44,3 +44,17 @@ func (h hand) show() {
 	}
 	fmt.Println()
 }
+
+func (h hand) Occurences() map[int]int {
+	var occurences map[int]int = make(map[int]int, 15)
+
+	for _, card := range h {
+		occurences[card.Value]++
+	}
+
+	return occurences
+}
+
+func (h hand) highCard() card {
+	return h[len(h)-1]
+}
