@@ -1,7 +1,12 @@
 package main
 
 import (
-	_ "fmt"
+	"fmt"
+	"sync"
+)
+
+const (
+	numOfCards = 5
 )
 
 type pokergame struct {
@@ -13,12 +18,12 @@ type pokergame struct {
 func (pg *pokergame) Setup() {
 	pg.players = []player{
 		player{"brice", []card{}},
-		player{"brice2", []card{}},
+		//		player{"brice2", []card{}},
 	}
 
 	pg.d = NewDeck()
 	pg.d.shuffle()
-	pg.handsize = 5
+	pg.handsize = numOfCards
 }
 
 func (pg *pokergame) Deal() {
@@ -31,62 +36,94 @@ func (pg *pokergame) Deal() {
 		}
 	}
 }
-
 func Run() {
-
 	var pg pokergame
 	pg.Setup()
 	pg.Deal()
-	for _, player := range pg.players {
-		player.h.Sort()
-		player.h.show()
-	}
-
+	drawHand(pg.players[0].h)
 }
 
-func flush(h hand) (flush bool) {
-	var suit rune
-	flush = true
-	for _, v := range h {
-		if suit != 0 && suit != v.Suit {
-			flush = false
-			return
-		} else {
-			suit = v.Suit
+func Simulate() {
+	var wg sync.WaitGroup
+	var hands map[string]int = map[string]int{}
+	var handChan chan string = make(chan string, 1000)
+
+	go func(hands map[string]int) {
+		for rank := range handChan {
+			hands[rank] += 1
+		}
+	}(hands)
+
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func() {
+			var pg pokergame
+			for i := 0; i < 1000; i++ {
+				pg.Setup()
+				pg.Deal()
+				for _, player := range pg.players {
+					player.h.Sort()
+					handChan <- rank(player.h)
+					//					player.h.show()
+				}
+			}
+			defer wg.Done()
+		}()
+	}
+
+	wg.Wait()
+	close(handChan)
+	for k, v := range hands {
+		fmt.Printf("%20s : %4d\n", k, v)
+	}
+}
+
+func rank(h hand) string {
+	if isRoyalFlush, _ := royalFlush(h); isRoyalFlush {
+		return "Royal Flush"
+	} else if isStraightFlush, _ := straightFlush(h); isStraightFlush {
+		return "Straight Flush"
+	} else if isFourOfAKind, _ := NOfAKind(h, 4); isFourOfAKind {
+		return "Four of a kind"
+	} else if isFullHouse, _ := fullHouse(h); isFullHouse {
+		return "Full House"
+	} else if isFlush, _ := flush(h); isFlush {
+		return "Flush"
+	} else if isStraight, _ := straight(h); isStraight {
+		return "Straight"
+	} else if isThreeOfAKind, _ := NOfAKind(h, 3); isThreeOfAKind {
+		return "3 of a kind"
+	} else if isTwoPair, _ := twoPair(h); isTwoPair {
+		return "2 pair"
+	} else if isPair, _ := NOfAKind(h, 2); isPair {
+		return "Pair"
+	} else {
+		return fmt.Sprintf("%s %d", "High Card", h.highCard().Value)
+	}
+}
+
+func removeCards(h hand, position ...int) hand {
+	var remainingCards hand
+	remainingCards = make(hand, len(h))
+	copy(remainingCards, h)
+
+	for _, pos := range position {
+		if pos > 0 && pos < numOfCards {
+			index := pos - 1
+			remainingCards[index] = card{}
 		}
 	}
-	return
+	return remainingCards
 }
 
-func straight(h hand) bool {
-	h.Sort()
-	var lastvalue int
+func replaceCards(h hand, d *deck) hand {
+	var blankCard card = card{}
 	for i, card := range h {
-		if i == 0 {
-			lastvalue = card.Value
-		} else {
-			if card.Value == lastvalue+1 {
-				lastvalue = card.Value
-			} else {
-				return false
+		if card.equal(blankCard) {
+			if newCard, ok := d.pop(); ok {
+				h[i] = newCard
 			}
 		}
 	}
-	return true
-}
-
-func fourOfAKind(h hand) bool {
-	h.Sort()
-	var occurences map[int]int = make(map[int]int, 15)
-
-	for _, card := range h {
-		occurences[card.Value]++
-	}
-
-	for _, value := range occurences {
-		if value == 4 {
-			return true
-		}
-	}
-	return false
+	return h
 }

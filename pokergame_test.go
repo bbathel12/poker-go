@@ -269,3 +269,59 @@ func Test_royalFlush(t *testing.T) {
 	}
 
 }
+
+func Test_removeCards(t *testing.T) {
+
+	var hands []hand = []hand{
+		hand{
+			card{hearts, ace},
+			card{hearts, king},
+			card{hearts, queen},
+			card{hearts, jack},
+			card{hearts, ten},
+		},
+		hand{
+			card{hearts, 2},
+			card{hearts, 3},
+			card{hearts, 8},
+			card{hearts, 5},
+			card{hearts, 6},
+		},
+	}
+
+	hands[0].Sort()
+	newHand := removeCards(hands[0], 1, 4)
+
+	if !(newHand[0].equal(blankCard) && newHand[3].equal(blankCard)) {
+		t.Error("Cards not removed")
+	}
+}
+
+func Test_replaceCards(t *testing.T) {
+	var d *deck = NewDeck()
+	d.shuffle()
+
+	var hands []hand = []hand{
+		hand{
+			card{hearts, ace},
+			card{hearts, king},
+			card{},
+			card{hearts, jack},
+			card{},
+		},
+		hand{
+			card{hearts, 2},
+			card{hearts, 3},
+			card{hearts, 8},
+			card{hearts, 5},
+			card{hearts, 6},
+		},
+	}
+
+	hands[0].Sort()
+	newHand := replaceCards(hands[0], d)
+
+	if newHand[2].equal(blankCard) || newHand[4].equal(blankCard) {
+		t.Error("Cards not repaced")
+	}
+}

@@ -4,6 +4,8 @@ import (
 	_ "fmt"
 )
 
+var blankCard = card{}
+
 const (
 	spades   = '♠'
 	hearts   = '♥'
