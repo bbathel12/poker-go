@@ -13,6 +13,7 @@ type pokergame struct {
 	players  []player
 	d        *deck
 	handsize int
+	over     bool
 }
 
 func (pg *pokergame) Setup() {
@@ -36,11 +37,40 @@ func (pg *pokergame) Deal() {
 		}
 	}
 }
+
 func Run() {
 	var pg pokergame
 	pg.Setup()
 	pg.Deal()
-	drawHand(pg.players[0].h)
+	startGame(pg)
+
+	for {
+		handleEvent(&pg)
+		drawBoard()
+		pg.players[0].h.Sort()
+		drawHand(pg.players[0].h)
+		drawRank(pg.players[0].h)
+		drawDiscards()
+		draw()
+		if pg.over {
+			waitForRestart(pg)
+			pg.Setup()
+			pg.Deal()
+			startGame(pg)
+			pg.over = false
+		}
+	}
+}
+
+func startGame(pg pokergame) {
+	drawBoard()
+	for k, _ := range pg.players {
+		pg.players[k].h.Sort()
+		drawHand(pg.players[k].h)
+		drawRank(pg.players[k].h)
+		drawDiscards()
+	}
+	draw()
 }
 
 func Simulate() {
@@ -98,21 +128,34 @@ func rank(h hand) string {
 	} else if isPair, _ := NOfAKind(h, 2); isPair {
 		return "Pair"
 	} else {
-		return fmt.Sprintf("%s %d", "High Card", h.highCard().Value)
+		var cardValue string
+		switch h.highCard().Value {
+		case 11:
+			cardValue = "Jack"
+		case 12:
+			cardValue = "Queen"
+		case 13:
+			cardValue = "King"
+		case 14:
+			cardValue = "Ace"
+		}
+		return fmt.Sprintf("%s %s", "High Card", cardValue)
 	}
 }
 
-func removeCards(h hand, position ...int) hand {
+func removeCards(h hand, discards map[int]bool) hand {
 	var remainingCards hand
 	remainingCards = make(hand, len(h))
 	copy(remainingCards, h)
 
-	for _, pos := range position {
-		if pos > 0 && pos < numOfCards {
-			index := pos - 1
+	for pos, ok := range discards {
+		if ok {
+			index := pos
 			remainingCards[index] = card{}
 		}
+		discards[pos] = false
 	}
+
 	return remainingCards
 }
 

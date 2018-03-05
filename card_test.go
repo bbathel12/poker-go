@@ -5,30 +5,30 @@ import (
 	"testing"
 )
 
-func Test_draw(t *testing.T) {
-	var testCorners []corner
-	var testCards []card
-	testCorners = []corner{
-		corner{10, 10},
-		corner{1, 2},
-		corner{5, 9},
-		corner{-1, -1},
-		corner{1, 7},
-	}
-
-	testCards = []card{
-		card{spades, 10},
-		card{hearts, 3},
-		card{diamonds, 1},
-		card{clubs, 7},
-		card{clubs, -1},
-	}
-
-	for k, card := range testCards {
-		_ = card.draw(testCorners[k])
-		//fmt.Println(pixels)
-	}
-}
+//func Test_draw(t *testing.T) {
+//	var testCorners []corner
+//	var testCards []card
+//	testCorners = []corner{
+//		corner{10, 10},
+//		corner{1, 2},
+//		corner{5, 9},
+//		corner{-1, -1},
+//		corner{1, 7},
+//	}
+//
+//	testCards = []card{
+//		card{spades, 10},
+//		card{hearts, 3},
+//		card{diamonds, 1},
+//		card{clubs, 7},
+//		card{clubs, -1},
+//	}
+//
+//	for k, card := range testCards {
+//		_ = card.draw(testCorners[k])
+//		//fmt.Println(pixels)
+//	}
+//}
 
 func Test_equal(t *testing.T) {
 	h10 := card{hearts, 10}

@@ -290,7 +290,7 @@ func Test_removeCards(t *testing.T) {
 	}
 
 	hands[0].Sort()
-	newHand := removeCards(hands[0], 1, 4)
+	newHand := removeCards(hands[0], map[int]bool{0: true, 3: true})
 
 	if !(newHand[0].equal(blankCard) && newHand[3].equal(blankCard)) {
 		t.Error("Cards not removed")
